@@ -10,8 +10,10 @@
         * { box-sizing: border-box; }
         body {
             font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
-            margin: 0; padding: 2rem; background: #0f172a; color: #e2e8f0;
+            width: 80%; max-width: 1100px; margin: 0 auto; padding: 2rem 0;
+            background: #0f172a; color: #e2e8f0;
         }
+        html { background: #0f172a; }
         h1 { margin: 0 0 .25rem; font-size: 1.6rem; }
         p.subtitle { margin: 0 0 1.5rem; color: #94a3b8; }
         .cards { display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 2rem; }
