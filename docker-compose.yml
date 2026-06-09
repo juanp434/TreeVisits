@@ -1,0 +1,13 @@
+services:
+  app:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      VISITS_PER_TREE: 5
+    volumes:
+      # Persist the SQLite database across restarts.
+      - sqlite-data:/app/database
+
+volumes:
+  sqlite-data:
