@@ -21,7 +21,8 @@ flowchart LR
 - **`customers`** — denormalized counters: `visits_count`, `trees_planted`, `last_visit_at`.
 - **`visits`** — one row per event (`occurred_at`), used for the per-hour aggregation.
 
-See [`docs/DECISIONS.md`](docs/DECISIONS.md) for the reasoning behind these choices.
+See [`docs/DECISIONS.md`](docs/DECISIONS.md) for the reasoning behind these choices, and
+[`docs/IMPROVEMENTS.md`](docs/IMPROVEMENTS.md) for what I'd do next.
 
 ## Running the project
 
