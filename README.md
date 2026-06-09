@@ -65,6 +65,9 @@ php artisan test
 
 Base URL: `http://localhost:8000`. All endpoints return JSON.
 
+A Postman collection is included at [`docs/TreeVisits.postman_collection.json`](docs/TreeVisits.postman_collection.json) —
+import it and adjust the `baseUrl` collection variable if your server runs elsewhere.
+
 ### `POST /api/visits` — record a visit event
 
 ```bash

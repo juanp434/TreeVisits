@@ -1,0 +1,153 @@
+{
+  "info": {
+    "_postman_id": "addd0006-4233-497f-9b9c-9b07e09251ba",
+    "name": "TreeVisits",
+    "description": "TreeVisits API — record visit events and read aggregated stats. Set the `baseUrl` collection variable to point at your server (defaults to http://localhost:8000).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "12597177"
+  },
+  "item": [
+    {
+      "name": "Record a Visit",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"customer_id\": \"customer-12345\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/visits",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "visits"
+          ]
+        },
+        "description": "Records a visit event for a customer. The customer is created on first sight. `occurred_at` (ISO-8601) is optional and defaults to now. Returns the customer state plus `tree_planted` (true only on the visit that crosses an X-visit boundary)."
+      },
+      "response": []
+    },
+    {
+      "name": "Record a Visit (with occurred_at)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"customer_id\": \"customer-12345\",\n  \"occurred_at\": \"2026-06-09T09:15:00Z\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/visits",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "visits"
+          ]
+        },
+        "description": "Same as Record a Visit but with an explicit timestamp, useful for backfilling or testing the per-hour aggregation."
+      },
+      "response": []
+    },
+    {
+      "name": "Visits hourly",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/visits/hourly",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "visits",
+            "hourly"
+          ],
+          "query": [
+            {
+              "key": "customer_id",
+              "value": "customer-12345",
+              "description": "Optional: limit aggregation to a single customer.",
+              "disabled": true
+            }
+          ]
+        },
+        "description": "Visits aggregated per hour. Optional `customer_id` query param filters to one customer. Powers the dashboard."
+      },
+      "response": []
+    },
+    {
+      "name": "Customers",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/customers",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "customers"
+          ]
+        },
+        "description": "Lists all customers with their counters (visits, trees, last visit)."
+      },
+      "response": []
+    },
+    {
+      "name": "Single customer",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/customers/customer-12345",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "customers",
+            "customer-12345"
+          ]
+        },
+        "description": "Shows a single customer by its device-provided id. Returns 404 if unknown."
+      },
+      "response": []
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8000",
+      "type": "string"
+    }
+  ]
+}
