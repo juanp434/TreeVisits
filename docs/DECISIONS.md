@@ -10,13 +10,18 @@ request validation, an ORM, migrations, a test harness and a templating engine �
 without pulling in extra dependencies. That keeps the amount of bespoke code low
 and lets the domain logic stand out.
 
-## Persistence: SQLite
+## Persistence: MySQL
 
-The brief explicitly allows anything from an in-memory variable to a database.
-SQLite is the middle ground: a *real* relational store (so the data model and the
-per-hour aggregation are demonstrated with actual SQL) but with zero
-infrastructure — it's just a file, no server to run. Switching to MySQL/Postgres
-later is only a connection-string change.
+The brief allows anything from an in-memory variable to a database. The project
+runs on **MySQL** (locally via XAMPP). It started on SQLite for zero-setup, but
+moving to MySQL buys three things that matter here: it's closer to a production
+deployment, the `lockForUpdate` in `VisitService` becomes a real row lock (a no-op
+on SQLite), and the integration tests exercise the *actual* driver instead of a
+stand-in.
+
+The trade-off is that the per-hour aggregation now uses MySQL's `DATE_FORMAT`
+(`app/Services/VisitService.php`), which is driver-specific — see
+[`IMPROVEMENTS.md`](IMPROVEMENTS.md) for abstracting it if multi-DB support is ever needed.
 
 ## Data model: two tables
 
@@ -30,16 +35,34 @@ later is only a connection-string change.
 Keeping both is a deliberate trade-off: a little write-time bookkeeping in
 exchange for cheap, flexible reads.
 
-## Trees: `floor(visits / X)`
+## Trees: `floor(visits / X)` as a domain value object
 
-Trees planted is derived as `intdiv(visits_count, VISITS_PER_TREE)` and recomputed
-on every visit, rather than incremented with separate counting state. It's
-idempotent with respect to the counter, impossible to get out of sync, and makes
-the rule obvious. `X` is read from the `VISITS_PER_TREE` config/env value.
+Trees planted is derived as `floor(visits_count / X)` and recomputed on every visit,
+rather than incremented with separate counting state. It's idempotent with respect to
+the counter, impossible to get out of sync, and makes the rule obvious.
 
-The visit is recorded and the counters updated inside a single DB transaction
-(with a row lock on the customer) so concurrent events from the same customer
-can't corrupt the count.
+The rule lives in a framework-free value object, `App\Domain\TreeReward`
+(`app/Domain/TreeReward.php`) — no Eloquent, no config, no database. It exposes
+`treesFor(visits)` and `plantedBetween(before, after)`. `VisitService` receives it by
+constructor injection and only orchestrates persistence. The single place that reads
+`VISITS_PER_TREE` is the binding in `AppServiceProvider`, which constructs the
+`TreeReward` with that value.
+
+This split is deliberate: it keeps the business rule decoupled from the framework so it
+can be unit-tested in isolation, without paying for full hexagonal layering (no
+repositories or DTOs) on a service this small.
+
+The visit is recorded and the counters updated inside a single DB transaction (with a
+row lock on the customer) so concurrent events from the same customer can't corrupt the
+count.
+
+## Testing: a pyramid, not just integration
+
+`TreeReward` is covered by **pure unit tests** (`tests/Unit/TreeRewardTest.php`) that
+extend PHPUnit's `TestCase` directly — no Laravel bootstrap, no database — so they run in
+milliseconds and form the base of the pyramid. The HTTP/persistence behaviour sits on top
+as fewer **integration tests** (`tests/Feature/*`) using `RefreshDatabase` against a
+dedicated MySQL test schema (`treevisits_test`).
 
 ## API shape
 

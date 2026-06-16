@@ -7,7 +7,6 @@ use App\Http\Resources\CustomerResource;
 use App\Services\VisitService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Carbon;
 
 class VisitController extends Controller
 {
@@ -20,14 +19,12 @@ class VisitController extends Controller
      */
     public function store(StoreVisitRequest $request): JsonResponse
     {
-        $occurredAt = $request->filled('occurred_at')
-            ? Carbon::parse($request->date('occurred_at'))
-            : null;
+        $occurredAt = $request->date('occurred_at');
 
-        $result = $this->visits->registerVisit($request->string('customer_id'), $occurredAt);
+        $outcome = $this->visits->registerVisit($request->string('customer_id'), $occurredAt);
 
-        return CustomerResource::make($result['customer'])
-            ->additional(['tree_planted' => $result['tree_planted']])
+        return CustomerResource::make($outcome->customer)
+            ->additional(['tree_planted' => $outcome->treePlanted])
             ->response()
             ->setStatusCode(201);
     }
