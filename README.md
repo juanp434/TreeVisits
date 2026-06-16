@@ -5,7 +5,7 @@ a customer walks in, the service counts visits per customer, remembers their las
 visit, and plants one tree for every **X** visits (configurable). A simple
 dashboard shows visits aggregated per hour.
 
-Built with **PHP 8.3 + Laravel** and **SQLite**.
+Built with **PHP 8.3 + Laravel** and **MySQL**.
 
 ## Architecture
 
@@ -13,7 +13,8 @@ Built with **PHP 8.3 + Laravel** and **SQLite**.
 flowchart LR
     Device["🛰️ Shop device<br/>(out of scope)"] -->|POST /api/visits| API["Laravel API<br/>routes/api.php"]
     API --> Service["VisitService<br/>(count + tree logic)"]
-    Service --> DB[("SQLite<br/>customers · visits")]
+    Service --> Rule["TreeReward<br/>(domain rule)"]
+    Service --> DB[("MySQL<br/>customers · visits")]
     Browser["🖥️ Dashboard"] -->|GET /api/visits/hourly| API
     API --> Browser
 ```
@@ -28,18 +29,28 @@ See [`docs/DECISIONS.md`](docs/DECISIONS.md) for the reasoning behind these choi
 
 ### Option A — local PHP
 
-Requires PHP 8.3+ (with `pdo_sqlite`) and [Composer](https://getcomposer.org/).
+Requires PHP 8.3+ (with `pdo_mysql`), [Composer](https://getcomposer.org/) and a
+running **MySQL** server (e.g. via [XAMPP](https://www.apachefriends.org/)).
+
+Create the databases first (defaults assume XAMPP's `root` user with no password):
+
+```sql
+CREATE DATABASE treevisits;
+CREATE DATABASE treevisits_test;   -- used by the test suite
+```
+
+Then:
 
 ```bash
 composer install
 cp .env.example .env          # Windows: copy .env.example .env
 php artisan key:generate
-touch database/database.sqlite # Windows: New-Item database/database.sqlite
 php artisan migrate
 php artisan serve
 ```
 
-Then open <http://localhost:8000>.
+Then open <http://localhost:8000>. Adjust the `DB_*` values in `.env` if your MySQL
+host/user/password differ from the XAMPP defaults.
 
 ### Option B — Docker
 
@@ -52,11 +63,18 @@ was not run in the environment it was authored in.)
 
 ### Configuration
 
-| Variable          | Default | Meaning                              |
-| ----------------- | ------- | ------------------------------------ |
-| `VISITS_PER_TREE` | `5`     | Visits a customer needs per 1 tree.  |
+| Variable          | Default       | Meaning                              |
+| ----------------- | ------------- | ------------------------------------ |
+| `VISITS_PER_TREE` | `5`           | Visits a customer needs per 1 tree.  |
+| `DB_DATABASE`     | `treevisits`  | MySQL database name.                 |
+| `DB_USERNAME`     | `root`        | MySQL user (XAMPP default).          |
+| `DB_PASSWORD`     | *(empty)*     | MySQL password (XAMPP default).      |
 
 ### Tests
+
+The suite runs against the dedicated `treevisits_test` database (configured in
+`phpunit.xml`). Pure domain rules are covered by fast unit tests in `tests/Unit`,
+HTTP/persistence behaviour by integration tests in `tests/Feature`.
 
 ```bash
 php artisan test

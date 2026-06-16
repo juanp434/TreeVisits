@@ -18,8 +18,9 @@ priority within each.
 
 ## Data & persistence
 
-- **DB-agnostic hourly aggregation** — `visitsPerHour` uses SQLite's `strftime`; abstract it
-  to port to Postgres/MySQL. (`app/Services/VisitService.php::visitsPerHour`)
+- **DB-agnostic hourly aggregation** — `visitsPerHour` uses MySQL's `DATE_FORMAT`, which is
+  driver-specific; abstract it (e.g. switch on the connection driver) to also support
+  Postgres/SQLite. (`app/Services/VisitService.php::visitsPerHour`)
 - **Timezone handling** — hourly buckets are in stored time (UTC); a shop/customer timezone
   may be needed for meaningful "per hour" views.
 - **Composite index `(customer_id, occurred_at)`** on `visits` to speed up the per-customer
@@ -31,8 +32,10 @@ priority within each.
 
 ## Concurrency & scale
 
-- **Move off SQLite for write load** — `lockForUpdate` works but SQLite is single-writer;
-  Postgres for real concurrency.
+- **Harden the visit registration race** — `lockForUpdate()->firstOrCreate()` only locks an
+  existing row; two concurrent *first* visits for the same customer can both miss and collide
+  on the unique index. Prefer an atomic upsert / `INSERT ... ON DUPLICATE KEY` plus an atomic
+  counter increment. (`app/Services/VisitService.php::registerVisit`)
 - **Queue the visit processing** to absorb traffic spikes (ingest fast, count async).
 - **Cache the `/api/visits/hourly` response** (short TTL) since the dashboard polls it.
 

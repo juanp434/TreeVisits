@@ -18,8 +18,8 @@ class VisitServiceTest extends TestCase
 
         $expectedTrees = [0, 1, 1, 2, 2, 3]; // floor(n / 2) for n = 1..6
         foreach ($expectedTrees as $i => $expected) {
-            $result = $service->registerVisit('cust-1');
-            $this->assertSame($expected, $result['customer']->trees_planted, "after visit ".($i + 1));
+            $outcome = $service->registerVisit('cust-1');
+            $this->assertSame($expected, $outcome->customer->trees_planted, "after visit ".($i + 1));
         }
     }
 
@@ -28,9 +28,9 @@ class VisitServiceTest extends TestCase
         Carbon::setTestNow('2026-06-09 12:00:00');
         $service = app(VisitService::class);
 
-        $result = $service->registerVisit('cust-1');
+        $outcome = $service->registerVisit('cust-1');
 
-        $this->assertEquals('2026-06-09 12:00:00', $result['customer']->last_visit_at->toDateTimeString());
+        $this->assertEquals('2026-06-09 12:00:00', $outcome->customer->last_visit_at->toDateTimeString());
         Carbon::setTestNow();
     }
 }
